@@ -1,7 +1,25 @@
+
 var buttonColours = ["red", "blue", "green", "yellow"];
 
 var gamePattern = [];
 var userClickedPattern = [];
+
+//To keep track of whether if the game has started or not, so you only call nextSequence() on the first keypress.
+var started = false;
+
+//2. New variable called level and start at level 0.
+var level = 0;
+
+//1. Detect when a keyboard key has been pressed.
+$(document).keypress(function() {
+  if (!started) {
+
+    //3. When the game has started, h1 changes to "Level 0".
+    $("#level-title").text("Level " + level);
+    nextSequence();
+    started = true;
+  }
+});
 
 $(".btn").click(function() {
 
@@ -9,21 +27,58 @@ $(".btn").click(function() {
   userClickedPattern.push(userChosenColour);
 
   playSound(userChosenColour);
+  animatePress(userChosenColour);
 
+  checkAnswer(userClickedPattern.length-1);
 });
 
-function nextSequence() {
+function checkAnswer(currentLevel) {
 
+  if (gamePattern[currentLevel] === userClickedPattern[currentLevel]) {
+    if (userClickedPattern.length === gamePattern.length){
+      setTimeout(function () {
+        nextSequence();
+      }, 1000);
+    }
+  } else {
+    playSound("wrong");
+    $("body").addClass("game-over");
+    $("#level-title").text("Game Over, Press Any Key to Restart");
+
+    setTimeout(function () {
+      $("body").removeClass("game-over");
+    }, 200);
+
+    startOver();
+  }
+}
+
+function nextSequence() {
+  userClickedPattern = [];
+  level++;
+  $("#level-title").text("Level " + level);
   var randomNumber = Math.floor(Math.random() * 4);
   var randomChosenColour = buttonColours[randomNumber];
   gamePattern.push(randomChosenColour);
 
   $("#" + randomChosenColour).fadeIn(100).fadeOut(100).fadeIn(100);
-
   playSound(randomChosenColour);
+}
+
+function animatePress(currentColor) {
+  $("#" + currentColor).addClass("pressed");
+  setTimeout(function () {
+    $("#" + currentColor).removeClass("pressed");
+  }, 100);
 }
 
 function playSound(name) {
   var audio = new Audio("sounds/" + name + ".mp3");
   audio.play();
+}
+
+function startOver() {
+  level = 0;
+  gamePattern = [];
+  started = false;
 }
